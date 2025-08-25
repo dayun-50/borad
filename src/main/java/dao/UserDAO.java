@@ -1,5 +1,8 @@
 package dao;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,7 +11,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.sql.DataSource;
 
-import dto.UserDTO;
+import DTO.LoginDTO;
 
 public class UserDAO {
 	private static UserDAO instance;
@@ -28,7 +31,7 @@ public class UserDAO {
 
 	}
 	public int interUser(String id,String pw,String name,String phone,
-			String email,int zipcode,String address1,String address2 )throws Exception {
+			String email,String zipcode,String address1,String address2 )throws Exception {
 		String sql="insert into members values(?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
 		try(Connection con=getConnection();PreparedStatement pstat = con.prepareStatement(sql);) {
 			pstat.setString(1,id);
@@ -36,14 +39,14 @@ public class UserDAO {
 			pstat.setString(3,name);
 			pstat.setString(4,phone);
 			pstat.setString(5,email);
-			pstat.setInt(6,zipcode);
+			pstat.setString(6,zipcode);
 			pstat.setString(7,address1);
 			pstat.setString(8,address2);
 
 			return pstat.executeUpdate();
 		}
 	}
-	public UserDTO getUser(String id) throws Exception {
+	public LoginDTO getUser(String id) throws Exception {
 	    String sql = "SELECT * FROM members WHERE id = ?";
 	    
 	    try (Connection con = getConnection();
@@ -52,32 +55,33 @@ public class UserDAO {
 	        pstat.setString(1, id);
 	        try (ResultSet rs = pstat.executeQuery()) {
 	            if (rs.next()) {
-	                return new UserDTO(
+	                return new LoginDTO(
 	                    rs.getString("id"),
 	                    rs.getString("pw"),
 	                    rs.getString("name"),
 	                    rs.getString("phone"),
 	                    rs.getString("email"),
-	                    rs.getInt("zipcode"),
+	                    rs.getString("zipcode"),
 	                    rs.getString("address1"),
 	                    rs.getString("address2"),
-	                    rs.getString("join_date_timestamp")
+	                    rs.getTimestamp("join_date_timestamp")
 	                );
 	            }
 	        }
 	    }
 	    return null;
 	}
-	public String getIdIfExist(String id) throws Exception {
+	
+	public boolean getIdIfExist(String id) throws Exception {
 		String sql = "SELECT id FROM members WHERE id = ?";
 		try (Connection con = getConnection();
 				PreparedStatement pstat = con.prepareStatement(sql)) {
 			pstat.setString(1, id);
 			try (ResultSet rs = pstat.executeQuery()) {
 				if (rs.next()) {
-					return rs.getString("id"); // 존재하면 해당 id 반환
+					return true; // 존재하면 해당 id 반환
 				} else {
-					return null; // 없으면 null
+					return false; // 없으면 null
 				}
 			}
 		}
@@ -99,28 +103,45 @@ public class UserDAO {
 			}
 		}
 	}
-	public boolean deleteMember(String id) throws Exception {
+	public int deleteMember(String id) throws Exception {
 		String sql = "DELETE FROM members WHERE id=?";
 		try (Connection con = getConnection();
 				PreparedStatement pstat = con.prepareStatement(sql)) {
 			pstat.setString(1, id);
 			int result = pstat.executeUpdate();  // ✅ 여기 수정!!
 			
-			return result > 0;  // 삭제된 행이 있으면 true 반환
+			return result;  
 		}
 	}
-	public int updateMember(String phone,String email,int zipcode,String address1,String address2,String id) throws Exception{
+	public int updateMember(String phone,String email,String zipcode,String address1,String address2,String id) throws Exception{
 		String sql="Update members set phone=?,email=?,zipcode=?,address1=?,address2=? where id=?";
 		try(Connection con=getConnection();
 				PreparedStatement pstat=con.prepareStatement(sql);){
 			pstat.setString(1, phone);
 			pstat.setString(2, email);
-			pstat.setInt(3, zipcode);
+			pstat.setString(3, zipcode);
 			pstat.setString(4,address1);
 			pstat.setString(5,address2);
 			pstat.setString(6,id);
 			
 			return pstat.executeUpdate();
+		}
+	}
+	
+	public static String encrypt(String text) { //SHA 암호화
+		try {
+			MessageDigest md = MessageDigest.getInstance("SHA-512");
+			byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+			byte[] digest = md.digest(bytes);
+
+			StringBuilder builder = new StringBuilder();
+			for (byte b : digest) {
+				builder.append(String.format("%02x", b));
+			}
+			return builder.toString();
+
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException("SHA-512 암호화 실패", e);
 		}
 	}
 

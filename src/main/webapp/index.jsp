@@ -95,9 +95,9 @@
 					</div>
 
 					<div class="btnbox">
-						<button type="submit" formaction="/login.MembersController"
+						<button type="submit" formaction="/login.member"
 							formmethod="post" class="submitblockbtn1">로그인</button>
-						<button type="submit" formaction="/Register.MembersController"
+						<button type="submit" formaction="/accession.member"
 							formmethod="get" class="submitblockbtn2">회원가입</button>
 					</div>
 
@@ -125,10 +125,10 @@
 					<td><a href="/logout.MembersController"><button>로그아웃</button></a>
 					</td>
 					<td>
-						<form id="deleteForm" action="/deletemember.MembersController"
-							method="get"></form>
-						<button type="button" id="deletememberbtn">회원탈퇴</button>
-
+						<form id="deleteForm" action="/logout.member"
+							method="post">
+							<button type="button" id="deletememberbtn">회원탈퇴</button>
+						</form>
 					</td>
 				</tr>
 			</table>

@@ -96,7 +96,7 @@ body {
 
 	<div class="container">
 		<div class="title">회원 가입 정보 입력</div>
-		<form action="/AddMember.MembersController" id="registerform"
+		<form action="/signup.member" id="registerform"
 			method="post">
 			<div class="row">
 				<label for="id">ID</label> <input type="text" id="id" name="id"
@@ -120,7 +120,7 @@ body {
 			</div>
 
 			<div class="row">
-				<label for="tel">전화번호</label> <input type="text" id="tel" name="tel"
+				<label for="tel">전화번호</label> <input type="text" id="tel" name="phone"
 					placeholder="전화번호를 입력하세요 (예: 010-1234-1234)">
 			</div>
 
@@ -130,18 +130,18 @@ body {
 			</div>
 
 			<div class="row">
-				<label for="zipcode">우편번호</label> <input type="text" id="zipcode"
+				<label for="zipcode">우편번호</label> <input type="text" id="zipcode" name="zipcode"
 					placeholder="우편번호" readonly>
 				<button type="button" id="addressSearch">찾기</button>
 			</div>
 
 			<div class="row">
-				<label for="addr">주소</label> <input type="text" id="addr"
+				<label for="addr">주소</label> <input type="text" id="addr" name="address1"
 					placeholder="주소를 입력하세요">
 			</div>
 
 			<div class="row">
-				<label for="addrDetail">상세주소</label> <input type="text"
+				<label for="addrDetail">상세주소</label> <input type="text" name="address2"
 					id="addrDetail" placeholder="상세주소를 입력하세요">
 			</div>
 
@@ -197,7 +197,7 @@ body {
 					//jsp를 요청하는게 아니라 servlet을 요청한다.
 					
 					$.ajax({ //아이디 팝업창으로 중복확인하게바꿈 ㅇㅇ
-						url:"/idcheck.MembersController",
+						url:"/idcheck.member",
 						data:{id:$("#id").val()},
 						success:function(reps){
 							if(reps == "true"){
