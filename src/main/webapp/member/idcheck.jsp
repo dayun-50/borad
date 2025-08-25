@@ -1,106 +1,60 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
-	pageEncoding="UTF-8"%>
-
-
+    pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <!DOCTYPE html>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"
-        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Insert title here</title>
+<meta charset="UTF-8" />
+<title>ID 중복 확인</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
 <style>
-.container {
-	width: 280px;
-	height: 150px;
-}
-
-.container .text {
-	padding-top: 60px;
-	width: 100%;
-	display: flex;
-	justify-content: center;
-	text-align: center;
-}
-
-.container .btn {
-	display: flex;
-	justify-content: center;
-	width: 100%;
-	padding-top: 5px;
-}
-
-.container .btn button {
-	color: white;
-	background-color: rgba(104, 104, 240, 0.664);
-	border: 1px solid rgba(104, 104, 240, 0.664);
-	margin: 1px;
-	border-radius: 5px;
-}
-
-.container .btn1 {
-	padding-top: 10px;
-	display: flex;
-	justify-content: center;
-	width: 100%;
-}
-
-.container .btn1 button {
-	color: white;
-	background-color: rgba(104, 104, 240, 0.664);
-	border: 1px solid rgba(104, 104, 240, 0.664);;
-	border-radius: 5px;
-}
+    body {
+        padding: 20px;
+        background-color: #f8f9fa;
+    }
+    .btn {
+        width: 100px;
+    }
 </style>
 </head>
 <body>
-	<c:choose>
-		<c:when test="${result == true}">
-			<div class="container">
-				<div class="text">사용중인 아이디입니다.</div>
-				<div class="btn1">
-					<form>
-						<button id="okBtn">확인</button>
-					</form>
-				</div>
-			</div>
-			<script>
-			$("#okBtn").on("click",function(){
-				opener.document.getElementById("id").value="";
-				opener.setDuplicateCheckTrue();
-				window.close();
-			});
-			</script>
-		</c:when>
+    <c:choose>
+        <c:when test="${result == false}">
+            <div class="card text-center">
+                <div class="card-header">ID 중복확인</div>
+                <div class="card-body">
+                    <h5 class="card-title text-primary fw-bold">사용할 수 있는 ID입니다.</h5>
+                    <p class="card-text">입력하신 ID를 사용하시겠습니까?</p>
+                    <button class="btn btn-primary" onclick="useId()">확인</button>
+                    <button class="btn btn-outline-primary" onclick="window.close()">취소</button>
+                </div>
+            </div>
+        </c:when>
+        <c:when test="${result == true}">
+            <div class="card text-center">
+                <div class="card-header">ID 중복확인</div>
+                <div class="card-body">
+                    <h5 class="card-title text-danger fw-bold">사용할 수 없는 ID입니다.</h5>
+                    <p class="card-text">다른 ID를 입력해주세요.</p>
+                    <button class="btn btn-primary" onclick="window.close()">확인</button>
+                </div>
+            </div>
+        </c:when>
+        <c:otherwise>
+            <script>
+                alert("잘못된 접근입니다.");
+                window.close();
+            </script>
+        </c:otherwise>
+    </c:choose>
 
-		<c:when test="${result == false}">
-			<div class="container">
-				<div class="text">
-					사용가능한 아이디입니다.<br> 아이디를 사용하시겠습니까?
-				</div>
-
-				<div class="btn">
-					<form>
-						<button id="okBtn">사용</button>
-					</form>
-					<form>
-						<button id="cancelBtn">취소</button>
-					</form>
-				</div>
-			</div>
-			<script>
-			$("#okBtn").on("click",function(){
-				opener.setDuplicateCheckTrue();
-				window.close();
-			});
-
-			$("#cancelBtn").on("click",function(){
-				opener.document.getElementById("id").value="";
-				opener.setDuplicateCheckTrue();
-				window.close();
-			});
-			</script>
-		</c:when>
-	</c:choose>
+    <script>
+        function useId() {
+            // 부모창의 ID 입력란에 값 넣고 팝업 닫기
+            opener.document.getElementById('id').value = opener.document.getElementById('id').value.trim();
+            window.close();
+        }
+    </script>
 </body>
 </html>
