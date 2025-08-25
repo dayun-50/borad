@@ -9,8 +9,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import DAO.MembersDAO;
-import DTO.MembersDTO;
+import DTO.LoginDTO;
+import dao.UserDAO;
 
 @WebServlet("*.member")
 public class Member extends HttpServlet {
@@ -24,21 +24,21 @@ public class Member extends HttpServlet {
         try {
             switch (cmd) {
                 case "/accession.member":  // 회원가입 폼 요청
-                    request.getRequestDispatcher("/member/accession.jsp").forward(request, response);
+                    request.getRequestDispatcher("/member/joinform.jsp").forward(request, response);
                     break;
 
                 case "/idcheck.member":    // 아이디 중복 검사 요청
                     String id = request.getParameter("id");
                     // DAO를 통해 해당 아이디가 이미 존재하는지 확인
-                    boolean isIdExist = MembersDAO.getInstance().isIdExist(id);
+                    boolean isIdExist = UserDAO.getInstance().getIdIfExist(id);
                     // 결과를 JSP에 전달
                     request.setAttribute("result", isIdExist);
                     request.getRequestDispatcher("/member/idcheck.jsp").forward(request, response);
                     break;
 
-                case "/login.member":      // 로그인 폼 요청
-                    request.getRequestDispatcher("/member/login.jsp").forward(request, response);
-                    break;
+//                case "/login.member":      // 로그인 폼 요청
+//                    request.getRequestDispatcher("/member/login.jsp").forward(request, response);
+//                    break;
 
                 case "/logout.member":     // 로그아웃 요청(GET)
                     HttpSession session = request.getSession(false);
@@ -55,7 +55,7 @@ public class Member extends HttpServlet {
                     }
                     String userId = (String) session.getAttribute("loginId");
                     // DAO에서 회원 정보 조회
-                    MembersDTO member = MembersDAO.getInstance().getMemberById(userId);
+                    LoginDTO member = UserDAO.getInstance().getUser(userId);
                     if (member == null) {
                         request.setAttribute("message", "회원 정보를 찾을 수 없습니다.");
                         request.getRequestDispatcher("/error.jsp").forward(request, response);
@@ -97,11 +97,11 @@ public class Member extends HttpServlet {
                     String address1 = request.getParameter("address1");
                     String address2 = request.getParameter("address2");
 
-                    // 비밀번호를 bcrypt 방식으로 암호화
-                    String encryptedPw = org.mindrot.jbcrypt.BCrypt.hashpw(pw, org.mindrot.jbcrypt.BCrypt.gensalt());
+                    // 암호화
+                    String encryptedPw = UserDAO.encrypt(pw);
 
                     // DAO를 통해 회원 정보를 DB에 저장
-                    int result = MembersDAO.getInstance().insertMember(id, encryptedPw, name, phone, email, zipcode, address1, address2);
+                    int result = UserDAO.getInstance().interUser(id, encryptedPw, name, phone, email, zipcode, address1, address2);
 
                     if (result > 0) {
                         request.setAttribute("message", "회원가입이 성공적으로 완료되었습니다.");
@@ -117,7 +117,7 @@ public class Member extends HttpServlet {
                     pw = request.getParameter("pw");
 
                     // DAO에서 로그인 성공 여부 확인 (비밀번호 검증 포함)
-                    boolean loginSuccess = MembersDAO.getInstance().login(id, pw);
+                    boolean loginSuccess = UserDAO.getInstance().loginCheck(id, pw);
                     if (loginSuccess) {
                         // 로그인 성공 시 세션 생성 및 로그인 아이디 저장
                         HttpSession newSession = request.getSession();
@@ -145,7 +145,7 @@ public class Member extends HttpServlet {
                         if (session != null) {
                             String userId = (String) session.getAttribute("loginId");
                             if (userId != null) {
-                                int delResult = MembersDAO.getInstance().deleteMember(userId);
+                                int delResult = UserDAO.getInstance().deleteMember(userId);
                                 if (delResult > 0) {
                                     session.invalidate();  // 탈퇴 성공 시 세션 무효화
                                     response.sendRedirect(request.getContextPath() + "/member/goodbye.jsp");
@@ -170,7 +170,6 @@ public class Member extends HttpServlet {
                         String userId = (String) session.getAttribute("loginId");
 
                         // 수정할 회원 정보 파라미터 수집
-                        String newName = request.getParameter("name");
                         String newPhone = request.getParameter("phone");
                         String newEmail = request.getParameter("email");
                         String newZipcode = request.getParameter("zipcode");
@@ -181,16 +180,16 @@ public class Member extends HttpServlet {
                         String encryptedNewPw = null;
                         // 새 비밀번호가 입력된 경우에만 암호화
                         if (newPw != null && !newPw.trim().isEmpty()) {
-                            encryptedNewPw = org.mindrot.jbcrypt.BCrypt.hashpw(newPw, org.mindrot.jbcrypt.BCrypt.gensalt());
+                            encryptedNewPw = UserDAO.encrypt(newPw);
                         }
 
                         // DAO를 통해 회원정보 전체 업데이트 시도
-                        int updateResult = MembersDAO.getInstance().updateMemberAll(
-                                userId, newName, newPhone, newEmail, newZipcode, newAddress1, newAddress2, encryptedNewPw);
+                        int updateResult = UserDAO.getInstance().updateMember(
+                                userId, newPhone, newEmail, newZipcode, newAddress1, newAddress2);
 
                         if (updateResult > 0) {
                             // 수정 성공 시 업데이트된 회원정보를 조회하여 마이페이지에 전달
-                            MembersDTO updatedMember = MembersDAO.getInstance().getMemberById(userId);
+                        	LoginDTO updatedMember = UserDAO.getInstance().getUser(userId);
                             request.setAttribute("member", updatedMember);
                             request.setAttribute("message", "회원정보가 성공적으로 수정되었습니다.");
                             request.getRequestDispatcher("/member/mypage.jsp").forward(request, response);
